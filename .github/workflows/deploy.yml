@@ -18,17 +18,20 @@ jobs:
         run: sudo apt-get install -y lftp
 
       - name: Deploy via lftp
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
         run: |
-          set -x
-          echo "Server: ${{ secrets.FTP_SERVER }}"
-          echo "Dir: ${{ secrets.FTP_SERVER_DIR }}"
-          lftp -d -c "
-          set ftp:ssl-force true;
-          set ftp:ssl-protect-data true;
-          set ssl:verify-certificate no;
-          open -u ${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_SERVER }};
-          cd ${{ secrets.FTP_SERVER_DIR }};
-          pwd;
-          mirror -R --verbose --exclude-glob .git* --exclude-glob .github* ./ .
-          "
-          echo "LFTP EXIT CODE: $?"
+          cat > deploy.lftp << 'SCRIPT'
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER
+          cd $FTP_SERVER_DIR
+          pwd
+          mirror -R --verbose --exclude-glob .git* --exclude-glob .github*
+          SCRIPT
+          lftp -f deploy.lftp
+          echo "EXIT CODE: $?"
