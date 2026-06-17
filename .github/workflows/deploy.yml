@@ -24,7 +24,7 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
         run: |
-          cat > deploy.lftp << 'SCRIPT'
+          cat > deploy.lftp << SCRIPT
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           set ssl:verify-certificate no
