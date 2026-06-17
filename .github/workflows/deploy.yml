@@ -14,13 +14,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+
       - name: Deploy via lftp
         run: |
-          sudo apt-get install -y lftp
-          lftp -c "
+          set -x
+          echo "Server: ${{ secrets.FTP_SERVER }}"
+          echo "Dir: ${{ secrets.FTP_SERVER_DIR }}"
+          lftp -d -c "
           set ftp:ssl-force true;
           set ftp:ssl-protect-data true;
           set ssl:verify-certificate no;
           open -u ${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_SERVER }};
-          mirror -R --delete --verbose --exclude-glob .git* --exclude-glob .github* ./ ${{ secrets.FTP_SERVER_DIR }}
+          cd ${{ secrets.FTP_SERVER_DIR }};
+          pwd;
+          mirror -R --verbose --exclude-glob .git* --exclude-glob .github* ./ .
           "
+          echo "LFTP EXIT CODE: $?"
